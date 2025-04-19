@@ -1,35 +1,30 @@
 name: cd
-
 on:
   push:
     branches: [main]
-
 jobs:
   Deploy:
     name: Deploy
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-
       - name: Set up go
         uses: actions/setup-go@v5
         with:
           go-version: "1.23.0"
-
       - name: Build app
         run: scripts/buildprod.sh
-
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
         with:
-          service-account-key: ${{ secrets.GCP_CREDENTIALS }}
-          project-id: notely-457319
-
+          project_id: notely-457319
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev
-
       - name: Build and push Docker image
         run: |
           gcloud builds submit --tag us-central1-docker.pkg.dev/notely-457319/notely-ar-repo/notely:latest .
